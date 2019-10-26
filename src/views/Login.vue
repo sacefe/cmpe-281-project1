@@ -66,9 +66,10 @@ export default {
                 switch(info) {
                 case 'signedIn' :
                     this.$store.dispatch('auth/setLoggedIn', {isLoggedIn:true, isAdmin: (isAdmin === 'Admin')});
-                    isAdmin === 'Admin' ? this.$router.push('/admin') : this.$router.push('/dashboard');
+                    isAdmin === 'Admin' ? this.$router.push('/admin') : this.$router.push('/user');
                     break;
                 default:
+                    this.$router.push('home');
                     break;
             }
             } catch(err) {

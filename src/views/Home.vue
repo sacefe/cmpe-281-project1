@@ -8,4 +8,28 @@
 
 <script>
 //if required write a code here not for project 1
+// import { AmplifyEventBus } from 'aws-amplify-vue';
+// import { Auth } from 'aws-amplify';
+// export default {
+//    mounted() {
+//     AmplifyEventBus.$on('authState', async info => {
+//       let isAdmin = await Auth.currentSession();
+//       isAdmin = isAdmin.accessToken.payload['cognito.groups'][0];
+//       console.log(isAdmin);
+//       switch(info) {
+//                 case 'signedOut' :
+//                    this.$store.dispatch('auth/setLoggedIn', false)
+//                    this.$router.push('/login');
+//                    break;
+//                 case 'signedIn' :
+//                     this.$store.dispatch('auth/setLoggedIn', {isLoggedIn: true, isAdmin: (isAdmin == 'Admin')});
+//                     isAdmin === 'Admin' ? this.$router.push('/admin') : this.$router.push('/user');  
+//                     break;
+//                 default:
+//                     // this.$router.push('/home');
+//                     break;
+//             }
+//     })
+//   }
+// }
 </script>

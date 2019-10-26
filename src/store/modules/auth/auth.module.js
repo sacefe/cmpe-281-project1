@@ -10,7 +10,9 @@ const getters = {
     isLoggedIn: (state) => {
         return state.isLoggedIn;
     },
-    isAdmin: (state) => (state.isAdmin),
+    isAdmin: (state) => {
+        return state.isAdmin
+    },
 }
 
 const namespaced = true;

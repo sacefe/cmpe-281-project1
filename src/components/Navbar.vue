@@ -1,7 +1,7 @@
 <template>
    <b-navbar toggleable="sm" variant="white" type="primary" class="shadow">
        <b-container>
-            <b-navbar-brand to="/" class= "text-primary">  
+            <b-navbar-brand :to="(isLoggedIn) ? ((isAdmin) ? '/admin' : '/user') : '/'" class= "text-primary">  
                  <fa :icon="['fab','aws']" />  CMPE-281 Project # 1
             </b-navbar-brand>
             <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
@@ -31,7 +31,6 @@ export default {
     firstName: '',
     signOutConfig: {
     },
-    
   }),
   computed: {
     isLoggedIn: function() {
@@ -39,7 +38,13 @@ export default {
         this.setUser();
         return true;
       } else return false;
-    }
+    },
+    isAdmin: function() {
+      if(this.$store.getters['auth/isAdmin']) {
+        this.setUser();
+        return true;
+      } else return false;
+    },
   },
   methods: {
     setUser: async function() {
@@ -50,14 +55,13 @@ export default {
         console.log(err);
         this.firstName = '';
       }
-      
     }
   },
-  async mounted() {
-    AmplifyEventBus.$on('authState', info => {
+  mounted() {
+    AmplifyEventBus.$on('authState', async info => {
       switch(info) {
                 case 'signedOut' :
-                    this.$store.dispatch('auth/setLoggedIn', false)
+                   this.$store.dispatch('auth/setLoggedIn', false)
                    this.$router.push('/login');
                    break;
                 default:
