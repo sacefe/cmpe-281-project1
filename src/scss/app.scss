@@ -1,0 +1,11 @@
+@import './variables';
+
+@import '~bootstrap/scss/bootstrap';
+
+.dropdown-toggle-no-caret::after {
+    content: none;
+}
+
+html, body, #app {
+    height: 100%;
+}
