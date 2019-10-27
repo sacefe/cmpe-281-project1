@@ -44,7 +44,13 @@
           <p><b>Created At:</b> {{new Date(modalData.createdAt).toUTCString()}}</p>
           <p><b>Updated At:</b> {{new Date(modalData.updatedAt).toUTCString()}}</p>
           <p><b>File Description:</b> {{modalData.fileDescription}}</p>
-          <b-btn block @click="updateFile(modalData)" variant="outline-dark"><fa icon="upload" /> Update</b-btn>
+          <!-- <b-btn block @click="updateFile(modalData)" variant="outline-dark"><fa icon="upload" /> Update</b-btn> -->
+         <b-form @submit.stop.prevent="onSubmit(modalData)">
+            <b-form-group label="Default:" label-for="file-default" label-cols-sm="2">
+                 <b-form-file v-model="userFile" id="file-default"></b-form-file>
+             </b-form-group>
+             <b-btn block type="submit">Upload</b-btn>
+          </b-form>          
         </div>
       </b-modal>
     </b-container>
