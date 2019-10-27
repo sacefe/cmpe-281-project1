@@ -1,0 +1,41 @@
+{
+    "paths": [
+        {
+            "name": "/files",
+            "lambdaFunction": "cmpe281proj1",
+            "privacy": {
+                "private": true,
+                "auth": [
+                    "/POST",
+                    "/GET",
+                    "/PUT",
+                    "/PATCH",
+                    "/DELETE"
+                ]
+            }
+        }
+    ],
+    "resourceName": "s3api",
+    "apiName": "s3api",
+    "functionArns": [
+        {
+            "lambdaFunction": "cmpe281proj1"
+        }
+    ],
+    "privacy": {
+        "auth": 1,
+        "unauth": 0,
+        "authRoleName": "cmpe-281-project1-prod-20191024122038-authRole",
+        "unAuthRoleName": "cmpe-281-project1-prod-20191024122038-unauthRole"
+    },
+    "dependsOn": [
+        {
+            "category": "function",
+            "resourceName": "cmpe281proj1",
+            "attributes": [
+                "Name",
+                "Arn"
+            ]
+        }
+    ]
+}

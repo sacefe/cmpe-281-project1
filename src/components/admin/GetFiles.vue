@@ -7,8 +7,17 @@
         <template v-slot:cell(index)="data">
         {{ data.index + 1 }}
         </template>
-        <template v-slot:cell(Details)="row">
-          <b-btn variant="primary" size="sm" @click="getFile(row.item)" v-b-modal.data-modal>See File Details</b-btn>
+        <template v-slot:cell(Actions)="row">
+          <!-- <b-btn pill variant="primary" size="sm" @click="getFile(row.item)" v-b-modal.data-modal>Get File</b-btn> -->
+          <!-- <b-dropdown id="dropdown-dropright" size="sm" dropright text=". . ." variant="outline-secondary" class="m-2"> -->
+          <b-dropdown id="dropdown-dropright" size="sm" dropright text=". . ." variant="primary" class="m-2"  button-content > 
+             <template v-slot:button-content>
+                 <fa icon="ellipsis-v" />
+             </template>
+             <b-dropdown-item @click="getFile(row.item)" v-b-modal.data-modal>Download File</b-dropdown-item>
+             <b-dropdown-item @click="getFile(row.item)" v-b-modal.delete-modal>Delete File</b-dropdown-item>
+             <b-dropdown-item @click="getFile(row.item)" v-b-modal.update-modal>Update/Replace</b-dropdown-item>
+          </b-dropdown>
         </template>
       </b-table>
       <b-modal id="data-modal" centered title="File Details" hide-footer header-bg-variant="primary">
@@ -17,11 +26,34 @@
           <p><b>Created At:</b> {{new Date(modalData.createdAt).toUTCString()}}</p>
           <p><b>Updated At:</b> {{new Date(modalData.updatedAt).toUTCString()}}</p>
           <p><b>File Description:</b> {{modalData.fileDescription}}</p>
-          <b-btn block @click="downloadFile(modalData.fileDescription)" variant="outline-dark"><fa icon="download" /> Download</b-btn>
+          <b-btn block @click="downloadFile(modalData)" variant="outline-dark"><fa icon="download" /> Download</b-btn>
+        </div>
+      </b-modal>
+      <b-modal id="delete-modal" ref="modal" centered title="File Details" hide-footer header-bg-variant="primary">
+        <div>
+          <p><b>Owner:</b> {{modalData.firstName}} {{modalData.lastName}}</p>
+          <p><b>Created At:</b> {{new Date(modalData.createdAt).toUTCString()}}</p>
+          <p><b>Updated At:</b> {{new Date(modalData.updatedAt).toUTCString()}}</p>
+          <p><b>File Description:</b> {{modalData.fileDescription}}</p>
+          <b-btn block @click="deleteFile(modalData)" variant="outline-dark"><fa icon="trash" /> Delete</b-btn>           
+        </div>
+      </b-modal>
+      <b-modal id="update-modal" ref="modal"  centered title="File Details" hide-footer header-bg-variant="primary">
+        <div>
+          <p><b>Owner:</b> {{modalData.firstName}} {{modalData.lastName}}</p>
+          <p><b>Created At:</b> {{new Date(modalData.createdAt).toUTCString()}}</p>
+          <p><b>Updated At:</b> {{new Date(modalData.updatedAt).toUTCString()}}</p>
+          <p><b>File Description:</b> {{modalData.fileDescription}}</p>
+          <!-- <b-btn block @click="updateFile(modalData)" variant="outline-dark"><fa icon="upload" /> Update</b-btn> -->
+          <b-form @submit.stop.prevent="onSubmit">
+            <b-form-group label="Default:" label-for="file-default" label-cols-sm="2">
+                 <b-form-file v-model="userFile" id="file-default"></b-form-file>
+             </b-form-group>
+             <b-btn block type="submit">Upload</b-btn>
+          </b-form>
         </div>
       </b-modal>
     </b-container>
-
 
 </template>
 
@@ -30,12 +62,14 @@
 
 export default {
   data: () => ({
+    // myGetFile: [],  
     files: [],
     fields: [
       {key: 'index', label: 'SN'},
-      {key: 'key', label: 'File', sortable: true},
-      {key: 'lastModified', label: 'Last Modified', sortable: true},
-      'Details'
+      {key: 'userId', label: 'Owner ID'},
+      {key: 'fileName', label: 'File', sortable: true},
+      {key: 'lastModified', label: 'Last Modified', sortable: true},    
+      'Actions'
     ],
     modalData: {}
   }),
@@ -46,47 +80,114 @@ export default {
     async getFiles() {
       try{
         const cognitoId = await this.$Amplify.Auth.currentSession();
-        const response = await this.$Amplify.Storage.list(cognitoId.idToken.payload['cognito:username']);
-        this.files = response.map(val => {
-          val.key = val.key.split('/')[1];
-          return val;
-        });
-        console.log(this.files);
+        console.log("cognito: ", cognitoId.idToken.payload['cognito:username']);
+        // const response = await this.$Amplify.Storage.list(cognitoId.idToken.payload['cognito:username']);
+        const response = await this.$Amplify.Storage.list('');
+        console.log(response);
+        this.files = await this.splitUserFromKey(response);
       } catch(err) {
-        console.log(err.response);
+        console.log(err);
       }
     },
+    splitUserFromKey(keys) {
+      let userFileList = [];
+      keys.forEach(value => {
+        let file = value.key.split('/')[1];
+        let user = value.key.split('/')[0];
+        userFileList.push({...value, fileName: file, userId: user});
+      });
+      console.log(userFileList);
+      return userFileList;
+    },
+    /***Get files from User Dynamo***/
     async getFile(row) {
       try {
         console.log(row);
         let apiName = 's3api';
-        const cognitoId = await this.$Amplify.Auth.currentSession();
-        let fileKey = `${cognitoId.idToken.payload['cognito:username']},${row.key}`;
-        let path = '/files/'+ fileKey;
-        console.log(path);
-        const response = await this.$Amplify.API.get(apiName, path);
+        // const cognitoId = await this.$Amplify.Auth.currentSession();
+        let fileKey = `${row.userId},${row.fileName}`;
+        let dyFileKey = '/files/'+ fileKey;   //path to Dynamo 
+        console.log(dyFileKey);
+        const response = await this.$Amplify.API.get(apiName, dyFileKey);
         this.modalData = response[0];
         console.log(response);
       } catch(err) {
         console.log(err);
       }
     },
-    async downloadFile(fileDescription) {
+     /***Get and Download a File Frpom S3***/
+    async downloadFile(modalData) {
         try{
-          const cognitoUser = await this.$Amplify.Auth.currentSession();    //UserID in Cognito
-          const s3Path = `${cognitoUser.idToken.payload['cognito:username']}/${fileDescription}`;    //file name and  Path in S3
-          console.log(cognitoUser);
-          console.log(s3Path);
-
-          const response = await this.$Amplify.Storage.get(s3Path, fileDescription, {
+          const s3Key = modalData.fileKey;
+          const s3file =  modalData.fileDescription;
+          console.log(s3Key);        //path to S3 file
+          console.log(s3file);
+          const response = await this.$Amplify.Storage.get(s3Key, s3file, {
             download: true
           });
           console.log(response);
-          window.location.href = response;
+          window.location.href = response; //execute download
         } catch (err) {
           console.log(err);
         }
-    }
+    },
+    /***Delete a File From Dynamo and S3***/
+    async deleteFile(modalData){
+      try{
+        /*Delete Dynamo file information*/
+         console.log(modalData);
+         let apiName = 's3api';
+          let dyFileKey = '/files/object/'+ modalData.fileKey.replace('/',',');
+          console.log(dyFileKey);
+          const responseDy = await this.$Amplify.API.del(apiName, dyFileKey);
+          console.log(responseDy);
+        /*Delete S3 file file*/
+          const s3Key = modalData.fileKey;
+          console.log(s3Key);
+          const responseS3 = await this.$Amplify.Storage.remove(s3Key);
+          console.log(responseS3);
+        this.$refs.modal.hide();
+      }catch(err){
+         console.log(err); 
+      }
+    },
+    /***Update & Replace a File From S3***/
+    async updateFile(modalData){
+      try{
+        console.log(modalData);
+        this.$refs.modal.hide();
+
+      } catch(err){
+        console.log(err);
+      } 
+    }, 
+    // async onSubmit() {
+    //       const cognitoUser = await this.$Amplify.Auth.currentSession();
+    //       const s3Path = `${cognitoUser.idToken.payload['cognito:username']}/${this.userFile.name}`;
+    //       console.log(s3Path)
+    //       console.log(this.userFile);
+    //       try {
+    //           const response = await this.$Amplify.Storage.put(s3Path, this.userFile, {});
+    //           let apiName = 's3api';
+    //           let path = '/files';
+    //           const postResponse = (response.key === s3Path) ?
+    //             await this.$Amplify.API.post(apiName, path, ({
+    //                 body: {
+    //                     fileKey: response.key,
+    //                     cognitoId: cognitoUser.idToken.payload['cognito:username'],
+    //                     firstName: cognitoUser.idToken.payload['custom:firstName'],
+    //                     lastName: cognitoUser.idToken.payload['custom:lastName'],
+    //                     createdAt: new Date(),
+    //                     updatedAt: new Date(),
+    //                     fileDescription: this.userFile.name
+    //                 }
+    //             })) : false;
+    //          console.log(postResponse);
+    //      } catch(err) {
+    //         console.log(err)
+    //      }
+    // } 
+
   }
 }
 

@@ -44,7 +44,7 @@ export default new Router({
         },
         children: [
             {
-                path: '/admin',
+                path: '/admin/',
                 name: 'GetFiles',
                 component: () => import('@/components/admin/GetFiles.vue')
             },
@@ -53,11 +53,11 @@ export default new Router({
                 name: 'UploadFile',
                 component: () => import('@/components/admin/UploadFile.vue')
             },
-            {
-                path: '/admin/update',
-                name: 'UpdateFile',
-                component: () => import('@/components/admin/UpdateFile.vue')
-            }
+            // {
+            //     path: '/admin/update',
+            //     name: 'UpdateFile',
+            //     component: () => import('@/components/admin/UpdateFile.vue')
+            // }
         ]
       },
       {
@@ -67,7 +67,19 @@ export default new Router({
         beforeEnter: (to, from, next) => {
           if(checkIsLoggedIn()) next();
           else next('/login');
-        }
+        },
+        children: [
+          {
+              path: '/user',
+              name: 'GetUserFiles',
+              component: () => import('@/components/user/GetUserFiles.vue')
+          },
+          {
+              path: '/user/upload',
+              name: 'UploadUserFile',
+              component: () => import('@/components/user/UploadUserFile.vue')
+          },
+        ]
       }
   ]
 })

@@ -4,9 +4,9 @@
         <template v-slot:header>
          <b-nav card-header tabs>
             <b-nav-item to="/admin">Get Files</b-nav-item>
-            <b-nav-item to="/admin/update">Update</b-nav-item>
+            <!-- <b-nav-item to="/admin/update">Update</b-nav-item> -->
             <b-nav-item to="/admin/upload">Upload</b-nav-item>
-            <b-nav-item class="ml-auto">Delete</b-nav-item>
+            <!-- <b-nav-item class="ml-auto">Delete</b-nav-item> -->
           </b-nav>
 
         </template>

@@ -1,0 +1,12 @@
+{
+    "permissions": {
+        "auth": {
+            "cmpe281project1dfbaf70e": [
+                "create",
+                "read",
+                "update",
+                "delete"
+            ]
+        }
+    }
+}

@@ -1,0 +1,5 @@
+{
+    "tableName": "cmpe281proj1db",
+    "partitionKeyName": "fileKey",
+    "partitionKeyType": "S"
+}

@@ -1,0 +1,19 @@
+{
+    "prod": {
+        "awscloudformation": {
+            "AuthRoleName": "cmpe-281-project1-prod-20191024122038-authRole",
+            "UnauthRoleArn": "arn:aws:iam::278810828493:role/cmpe-281-project1-prod-20191024122038-unauthRole",
+            "AuthRoleArn": "arn:aws:iam::278810828493:role/cmpe-281-project1-prod-20191024122038-authRole",
+            "Region": "us-east-1",
+            "DeploymentBucketName": "cmpe-281-project1-prod-20191024122038-deployment",
+            "UnauthRoleName": "cmpe-281-project1-prod-20191024122038-unauthRole",
+            "StackName": "cmpe-281-project1-prod-20191024122038",
+            "StackId": "arn:aws:cloudformation:us-east-1:278810828493:stack/cmpe-281-project1-prod-20191024122038/5ba5aac0-f693-11e9-8c7d-0a0bad6f0bfa"
+        },
+        "categories": {
+            "auth": {
+                "cmpe281project1dfbaf70e": {}
+            }
+        }
+    }
+}
