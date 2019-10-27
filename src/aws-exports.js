@@ -22,7 +22,10 @@ const awsmobile = {
             "endpoint": "https://t99q4m7xx5.execute-api.us-east-1.amazonaws.com/prod",
             "region": "us-east-1"
         }
-    ]
+    ],
+    "aws_content_delivery_bucket": "cmpe-281-project1-20191027012408-hostingbucket-prod",
+    "aws_content_delivery_bucket_region": "us-east-1",
+    "aws_content_delivery_url": "https://d2qejhuj84nlpb.cloudfront.net"
 };
 
 
