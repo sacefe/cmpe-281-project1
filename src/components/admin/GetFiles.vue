@@ -20,7 +20,7 @@
           </b-dropdown>
         </template>
       </b-table>
-      <b-modal id="data-modal" centered title="File Details" hide-footer header-bg-variant="primary">
+      <b-modal id="data-modal"  ref="modal" centered title="File Details" hide-footer header-bg-variant="primary">
         <div>
           <p><b>Owner:</b> {{modalData.firstName}} {{modalData.lastName}}</p>
           <p><b>Created At:</b> {{new Date(modalData.createdAt).toUTCString()}}</p>
@@ -45,7 +45,7 @@
           <p><b>Updated At:</b> {{new Date(modalData.updatedAt).toUTCString()}}</p>
           <p><b>File Description:</b> {{modalData.fileDescription}}</p>
           <!-- <b-btn block @click="updateFile(modalData)" variant="outline-dark"><fa icon="upload" /> Update</b-btn> -->
-          <b-form @submit.stop.prevent="onSubmit">
+          <b-form @submit.stop.prevent="onSubmit(modalData)">
             <b-form-group label="Default:" label-for="file-default" label-cols-sm="2">
                  <b-form-file v-model="userFile" id="file-default"></b-form-file>
              </b-form-group>
@@ -71,7 +71,8 @@ export default {
       {key: 'lastModified', label: 'Last Modified', sortable: true},    
       'Actions'
     ],
-    modalData: {}
+    modalData: {},
+    userFile: null
   }),
   mounted() {
     this.getFiles();
@@ -79,8 +80,8 @@ export default {
   methods: {
     async getFiles() {
       try{
-        const cognitoId = await this.$Amplify.Auth.currentSession();
-        console.log("cognito: ", cognitoId.idToken.payload['cognito:username']);
+        //const cognitoId = await this.$Amplify.Auth.currentSession();
+        //console.log("cognito: ", cognitoId.idToken.payload['cognito:username']);
         // const response = await this.$Amplify.Storage.list(cognitoId.idToken.payload['cognito:username']);
         const response = await this.$Amplify.Storage.list('');
         console.log(response);
@@ -107,7 +108,7 @@ export default {
         // const cognitoId = await this.$Amplify.Auth.currentSession();
         let fileKey = `${row.userId},${row.fileName}`;
         let dyFileKey = '/files/'+ fileKey;   //path to Dynamo 
-        console.log(dyFileKey);
+        // console.log(dyFileKey);
         const response = await this.$Amplify.API.get(apiName, dyFileKey);
         this.modalData = response[0];
         console.log(response);
@@ -120,13 +121,14 @@ export default {
         try{
           const s3Key = modalData.fileKey;
           const s3file =  modalData.fileDescription;
-          console.log(s3Key);        //path to S3 file
-          console.log(s3file);
+          // console.log(s3Key);        //path to S3 file
+          // console.log(s3file);
           const response = await this.$Amplify.Storage.get(s3Key, s3file, {
             download: true
           });
           console.log(response);
           window.location.href = response; //execute download
+          this.$refs.modal.hide();    //close modal
         } catch (err) {
           console.log(err);
         }
@@ -138,55 +140,62 @@ export default {
          console.log(modalData);
          let apiName = 's3api';
           let dyFileKey = '/files/object/'+ modalData.fileKey.replace('/',',');
-          console.log(dyFileKey);
+          // console.log(dyFileKey);
           const responseDy = await this.$Amplify.API.del(apiName, dyFileKey);
           console.log(responseDy);
         /*Delete S3 file file*/
           const s3Key = modalData.fileKey;
-          console.log(s3Key);
+          // console.log(s3Key);
           const responseS3 = await this.$Amplify.Storage.remove(s3Key);
           console.log(responseS3);
-        this.$refs.modal.hide();
+          this.$refs.modal.hide();
       }catch(err){
          console.log(err); 
       }
     },
     /***Update & Replace a File From S3***/
-    async updateFile(modalData){
-      try{
-        console.log(modalData);
-        this.$refs.modal.hide();
+    // async updateFile(modalData){
+    //   try{
+    //     console.log(modalData);
+    //     this.$refs.modal.hide();
 
-      } catch(err){
-        console.log(err);
-      } 
-    }, 
-    // async onSubmit() {
-    //       const cognitoUser = await this.$Amplify.Auth.currentSession();
-    //       const s3Path = `${cognitoUser.idToken.payload['cognito:username']}/${this.userFile.name}`;
-    //       console.log(s3Path)
-    //       console.log(this.userFile);
-    //       try {
-    //           const response = await this.$Amplify.Storage.put(s3Path, this.userFile, {});
-    //           let apiName = 's3api';
-    //           let path = '/files';
-    //           const postResponse = (response.key === s3Path) ?
-    //             await this.$Amplify.API.post(apiName, path, ({
-    //                 body: {
-    //                     fileKey: response.key,
-    //                     cognitoId: cognitoUser.idToken.payload['cognito:username'],
-    //                     firstName: cognitoUser.idToken.payload['custom:firstName'],
-    //                     lastName: cognitoUser.idToken.payload['custom:lastName'],
-    //                     createdAt: new Date(),
-    //                     updatedAt: new Date(),
-    //                     fileDescription: this.userFile.name
-    //                 }
-    //             })) : false;
-    //          console.log(postResponse);
-    //      } catch(err) {
-    //         console.log(err)
-    //      }
-    // } 
+    //   } catch(err){
+    //     console.log(err);
+    //   } 
+    // }, 
+    async onSubmit(modalData) {
+          const s3key =  modalData.fileKey;   //xyxyxyxyxyyxyx/myFiles1.txt
+          const fileName = modalData.fileDescription;
+          // console.log(s3key)   
+          // console.log(fileName); 
+          // console.log(modalData);
+          try{
+            if( fileName ===  this.userFile.name ){
+               const response = await this.$Amplify.Storage.put(s3key, fileName, {});
+               let apiName = 's3api';
+               let path = '/files';
+ 
+               const postResponse = (response.key === s3key) ?
+                 await this.$Amplify.API.put(apiName, path, ({
+                    body: {    //Just update the new date
+                        fileKey: response.key,
+                        cognitoId: modalData.cognitoId,
+                        firstName: modalData.firstName,
+                        lastName: modalData.lastName,
+                        createdAt:modalData.createdAt,
+                        updatedAt: new Date(),
+                        fileDescription: fileName
+                    }
+                 })) : false;
+              console.log(postResponse);
+              this.$refs.modal.hide();
+            }else{
+               console.log("You need to choose the same file Name");
+            }
+          }catch(err){
+            console.log(err);
+          }
+    } 
 
   }
 }

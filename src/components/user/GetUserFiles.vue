@@ -73,14 +73,14 @@ export default {
     async getFiles() {
       try{
         const cognitoId = await this.$Amplify.Auth.currentSession();
-        console.log("cognito ", cognitoId.idToken.payload['cognito:username']);
+        //console.log("cognito ", cognitoId.idToken.payload['cognito:username']);
         const response = await this.$Amplify.Storage.list(cognitoId.idToken.payload['cognito:username']);
         console.log(response);
         this.files = response.map(val => {
           val.key = val.key.split('/')[1];
           return val;
         });
-        console.log(this.files);
+        // console.log(this.files);
       } catch(err) {
         console.log(err.response);
       }
@@ -88,12 +88,12 @@ export default {
     /***Get files from User Dynamo***/
     async getFile(row) {
       try {
-        console.log(row);
+        // console.log(row);
         let apiName = 's3api';
         const cognitoId = await this.$Amplify.Auth.currentSession();
         let fileKey = `${cognitoId.idToken.payload['cognito:username']},${row.key}`;
         let dyFileKey = '/files/'+ fileKey;   //path to Dynamo 
-        console.log(dyFileKey);
+        // console.log(dyFileKey);
         const response = await this.$Amplify.API.get(apiName, dyFileKey);
         this.modalData = response[0];
         console.log(response);
@@ -106,8 +106,8 @@ export default {
         try{
           const s3Key = modalData.fileKey;
           const s3file =  modalData.fileDescription
-          console.log(s3Key);        //path to S3 file
-          console.log(s3file);
+        //   console.log(s3Key);        //path to S3 file
+        //   console.log(s3file);
           const response = await this.$Amplify.Storage.get(s3Key, s3file, {
             download: true
           });
@@ -121,16 +121,16 @@ export default {
     async deleteFile(modalData){
       try{
         /*Delete Dynamo file information*/
-          console.log(modalData);
+        //   console.log(modalData);
           let apiName = 's3api';
-          console.log(apiName);
+        //   console.log(apiName);
           let dyFileKey = '/files/object/'+ modalData.fileKey.replace('/',',');
-          console.log(dyFileKey);
+        //   console.log(dyFileKey);
           const responseDy = await this.$Amplify.API.del(apiName, dyFileKey);
           console.log(responseDy);
         /*Delete S3 file file*/
           const s3Key = modalData.fileKey;
-          console.log(s3Key);
+        //   console.log(s3Key);
           const responseS3 = await this.$Amplify.Storage.remove(s3Key);
           console.log(responseS3);
         this.$refs.modal.hide();
@@ -139,15 +139,48 @@ export default {
       }
     },
     /***Update & Replace a File From S3***/
-    async updateFile(modalData){
-      try{
-        console.log(modalData);
-        this.$refs.modal.hide();
+    // async updateFile(modalData){
+    //   try{
+    //     console.log(modalData);
+    //     this.$refs.modal.hide();
 
-      } catch(err){
-        console.log(err);
-      } 
-    } 
+    //   } catch(err){
+    //     console.log(err);
+    //   } 
+    // }, 
+    async onSubmit(modalData) {
+          const s3key =  modalData.fileKey;   //xyxyxyxyxyyxyx/myFiles1.txt
+          const fileName = modalData.fileDescription;
+        //   console.log(s3key)   
+        //   console.log(fileName); 
+        //   console.log(modalData);
+          try{
+            if( fileName ===  this.userFile.name ){
+               const response = await this.$Amplify.Storage.put(s3key, fileName, {});
+               let apiName = 's3api';
+               let path = '/files';
+ 
+               const postResponse = (response.key === s3key) ?
+                 await this.$Amplify.API.put(apiName, path, ({
+                    body: {    //Just update the new date
+                        fileKey: response.key,
+                        cognitoId: modalData.cognitoId,
+                        firstName: modalData.firstName,
+                        lastName: modalData.lastName,
+                        createdAt:modalData.createdAt,
+                        updatedAt: new Date(),
+                        fileDescription: fileName
+                    }
+                 })) : false;
+              console.log(postResponse);
+              this.$refs.modal.hide();
+            }else{
+               console.log("You need to choose the same file Name");
+            }
+          }catch(err){
+            console.log(err);
+          }
+    }  
 
   }
 }

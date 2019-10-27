@@ -25,8 +25,8 @@ export default {
       async onSubmit() {
           const cognitoUser = await this.$Amplify.Auth.currentSession();
           const s3Path = `${cognitoUser.idToken.payload['cognito:username']}/${this.userFile.name}`;
-          console.log(s3Path)
-          console.log(this.userFile);
+        //   console.log(s3Path)
+        //   console.log(this.userFile);
           try {
               const response = await this.$Amplify.Storage.put(s3Path, this.userFile, {});
               let apiName = 's3api';
