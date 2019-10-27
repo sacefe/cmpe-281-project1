@@ -1,4 +1,4 @@
-# three-tier-app
+# Serverless Web App using AWS
 
 ## Project setup
 ```
